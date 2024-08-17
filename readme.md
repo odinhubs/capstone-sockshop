@@ -1,11 +1,12 @@
 # **Socks Shop Microservices-based Application Deployment.**
 
-![diagram](./images/7.jpeg)
+![diagram](images/7.jpeg)
+
 
 
 **PROJECT LIVE LINK:** [CAPSTONE PROJECT LINK](https://www.bahin-markpointnglimited.com)
 
-
+### Domain name: https://www.bahin-markpointnglimited.com
 
 ## Setup Details:
 * Provision the Socks Shop example microservice application -
@@ -90,6 +91,7 @@ terraform {
   }
 }
 ```
+![diagram](images/22.jpeg)
 
 #### Note
 This should not include in your pipeline deployment directory as it should be done seperately in a different directory.
@@ -141,6 +143,9 @@ Define tfvars for the project.
 ## Terraform outputs
  Define outputs for the project.
 * Create a new file called outputs.tf and add the following ref: terraform/output.tf
+
+![diagram](images/2.jpeg)
+
 
 # Step 3:
 
@@ -325,6 +330,7 @@ to login to the argocd application
 ```bash
  kubectl get svc -n argocd
 ```
+![diagram](images/18.jpeg)
 
 use the load balancer to login to the argocd application
 
@@ -374,8 +380,9 @@ Traditionally, in Argo CD, we can deploy applications with configurations in man
 
 * Go to the argocd application and click on sync button
 
+![diagram](images/17.jpeg)
 
-### Find my images in the screenshot directory.
+### Find more images in the screenshot directory.
 
 
 
