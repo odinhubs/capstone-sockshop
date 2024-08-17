@@ -1,6 +1,6 @@
 # **Socks Shop Microservices-based Application Deployment.**
 
-<img src="Images/7.jpeg">
+<img src="images/7.jpeg">
 
 
 **PROJECT LIVE LINK:** [CAPSTONE PROJECT LINK](https://www.bahin-markpointnglimited.com)
