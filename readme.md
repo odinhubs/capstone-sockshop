@@ -8,6 +8,8 @@
 
 ### Domain name: https://www.bahin-markpointnglimited.com
 
+![diagram](images/2.png)
+
 ## Setup Details:
 * Provision the Socks Shop example microservice application -
 https://microservices-demo.github.io/
@@ -91,7 +93,7 @@ terraform {
   }
 }
 ```
-![diagram](images/22.png)
+
 
 #### Note
 This should not include in your pipeline deployment directory as it should be done seperately in a different directory.
@@ -123,7 +125,7 @@ IAM roles and policies are used to control access to AWS resources. In this case
 * Create a new file called eks-cluster.tf and add the following ref: terraform/eks-cluster.tf
 
 ## EKS Node Group Setup
-Create a node group to run appplication workloads.
+Create a node group to run application workloads.
 IAM Role: similar to the cluster role, we will create a role that will allow the nodes to access other AWS resources.
 IAM Policy: Attach the AmazonEKSWorkerNodePolicy, AmazonEKS_CNI_Policy policies and AmazonEC2ContainerRegistryReadOnly policy to the role.
 Create a new file called node.tf and add the following ref: terraform/node-group.tf
@@ -137,14 +139,14 @@ Define data sources for the project.
 * Create a new file called data.tf and add the following ref: terraform/data.tf
 
 ## Terraform 
-Define tfvars for the project.
-* Create a new file called tfvars.tf and add the following ref: terraform/tfvars.tf
+Define main for the project.
+* Create a new file called main.tf and add the following ref: terraform/main.tf
 
 ## Terraform outputs
  Define outputs for the project.
 * Create a new file called outputs.tf and add the following ref: terraform/output.tf
 
-![diagram](images/2.png)
+
 
 
 # Step 3:
@@ -244,6 +246,11 @@ apps/
     └── complete-demo.yaml
 
 ```
+
+output:
+
+![diagram](images/22.png)
+
 # Step 4:
 
 This structure appears to organize various Kubernetes manifests and configuration files for different applications and components related to monitoring, logging, ingress, autoscaling, and more. Refer to this link "https://github.com/microservices-demo/microservices-demo/tree/master/deploy/kubernetes" to get the files in the directory listed above. Each subdirectory contains files specific to its purpose.
@@ -255,13 +262,13 @@ To push files to a GitHub repository after cloning it locally, follow these step
 1. **Clone the Repository**: If you haven't already, clone the GitHub repository to your local machine using the `git clone` command. Replace `<repository-url>` with the URL of your GitHub repository.
 
     ```bash
-    git clone capstone-git
+    git clone capstone-sockshop
     ```
 
 2. **Navigate to the Repository Directory**: Move into the directory created by the clone operation.
 
     ```bash
-    cd capstone-git
+    cd capstone-sockshop
     ```
 
 3. **Add Files to Staging Area**: Add the files you want to commit to the staging area using the `git add` command. You can specify individual files or directories. For example, to add all files, use:
@@ -288,6 +295,20 @@ Note that apply commands will be uncommented to trigger the deployment while des
 
 By executing these commands, you'll push your changes to the GitHub repository, making them available for GitHub Actions to use when triggering the deployment pipeline. Make sure you have appropriate permissions to push changes to the repository and make sure your 'AWS ACCESS KEY ID' and 'AWS SECRET ACCESS KEY' is installed in your actions tab under Secrets and variables when you click settings of your working repository.
 
+## **Monitoring**
+
+Prometheus will be used to monitor the performance and health of the Socks Shop application. This will include metrics such as request latency, error rate, and request volume. The Prometheus server will be configured to scrape metrics from the Socks Shop application and store them in a time-series database. Grafana will be used to visualize the metrics and create dashboards to monitor the performance and health of the application.
+
+![diagram](images/12.png)
+
+After setting up and connecting your prometheus, it should look like this
+
+![diagram](images/1.png)
+
+Your grafana should look like this too
+
+![diagram](images/21.jpg)
+
 # Step 5:
 
 *After the successful deployment of the files using Github Actions, we need to add the cluster to our local kubctl config or we update the context
@@ -307,8 +328,11 @@ aws eks --region <YOUR_AWS_REGION> update-kubeconfig --name <YOUR_EKS_CLUSTER_NA
 ```bash
  kubectl get pods -n argocd
 ```
+![diagram](images/14.png)
 
 * Expose the argocd application
+
+![diagram](images/4.png)
 
 by default, the argocd application is not exposed to an external IP address. 
 * We need to expose the argocd application to a load balancer.
@@ -330,6 +354,7 @@ to login to the argocd application
 ```bash
  kubectl get svc -n argocd
 ```
+![diagram](images/17.png)
 ![diagram](images/18.png)
 
 use the load balancer to login to the argocd application
