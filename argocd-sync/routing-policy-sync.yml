@@ -1,0 +1,21 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: sockshop-routing-policy
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Zenitugo/microservice-app-CD
+    targetRevision: HEAD
+    path: ./manifest/routing-policy
+  destination: 
+    server: https://kubernetes.default.svc
+    namespace: sock-shop
+  syncPolicy:
+    syncOptions:
+    - CreateNamespace=true
+    automated:
+      selfHeal: true
+      prune: true

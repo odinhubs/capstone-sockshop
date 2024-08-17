@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: elasticsearch
+  namespace: elk 
+spec:
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: elk
+  source:
+    repoURL: 'https://github.com/neyo55/capstone-git'
+    path: ./apps/elk
+    targetRevision: HEAD
+  project: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

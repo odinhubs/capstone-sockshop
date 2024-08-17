@@ -1,0 +1,172 @@
+name: Terraform and Deploy to EKS
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  AWS_REGION: eu-west-2
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+jobs:
+  terraform:
+    name: Terraform
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-2
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Install kubectl
+        run: |
+          sudo curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+
+      # # Install Argo CD CRDs
+      # - name: Install Argo CD CRDs
+      #   run: kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml    
+      
+      - name: Install ArgoCD CLI
+        run: |
+          sudo curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+          sudo chmod +x /usr/local/bin/argocd
+
+      # Install Terraform
+      - name: Install Terraform CLI
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -input=false
+
+      # - name: Terraform Apply
+      #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      #   run: terraform apply -auto-approve -input=false
+
+      - name: Terraform Destroy
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: terraform destroy -auto-approve -input=false    
+
+  k8s_apply:
+    name: Deploy to Kubernetes
+    runs-on: ubuntu-latest
+    needs: terraform
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Configure Kubeconfig
+        run: aws eks update-kubeconfig --name neyo-capstone-cluster --region eu-west-2
+
+      # install Helm
+      - name: Install Helm
+        run: |
+          curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
+          chmod +x get_helm.sh
+          ./get_helm.sh
+
+      - name: Add Argo CD Helm repository
+        run: |
+          helm repo add argo-cd https://argoproj.github.io/argo-helm
+          helm repo update || exit 1
+      
+      - name: Create argocd namespace if it doesn't exist
+        run: kubectl create namespace argocd || echo "Namespace already exists"
+
+      # Install Prometheus Operator CRDs
+      - name: Deploy Prometheus Operator CRDs
+        run: |
+          kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/release-0.44/example/prometheus-operator-crd/monitoring.coreos.com_alertmanagers.yaml
+          kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/release-0.44/example/prometheus-operator-crd/monitoring.coreos.com_podmonitors.yaml
+          kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/release-0.44/example/prometheus-operator-crd/monitoring.coreos.com_prometheuses.yaml
+          kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/release-0.44/example/prometheus-operator-crd/monitoring.coreos.com_prometheusrules.yaml
+          kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/release-0.44/example/prometheus-operator-crd/monitoring.coreos.com_servicemonitors.yaml
+          kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/release-0.44/example/prometheus-operator-crd/monitoring.coreos.com_thanosrulers.yaml
+
+      # Install Argo CD    
+      - name: Install Argo CD
+        run: |
+            if helm list -n argocd | grep -q argocd; then
+              helm uninstall argocd -n argocd || exit 1
+            fi
+            helm install argocd argo-cd/argo-cd --namespace argocd || exit 1
+         
+      - name: Check Argo CD deployment status
+        run: kubectl get deployment -n argocd || exit 1   
+       
+      # create namespaces for the applications  
+      - name: Create monitoring namespace if it does not exist
+        run: |
+          if ! kubectl get namespace monitoring &>/dev/null; then
+            kubectl create -f apps/manifests-monitoring/monitoring/00-monitoring-ns.yaml
+          fi 
+
+      # Add the Nginx Ingress Controller Helm repository
+      - name: Add NGINX Ingress Controller Helm repository
+        run: |
+          helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+          helm repo update || exit 1
+
+      # Install NGINX Ingress Controller using Helm
+      - name: Install NGINX Ingress Controller
+        run: |
+          kubectl create namespace ingress-nginx || echo "Namespace already exists"
+          helm install nginx-ingress ingress-nginx/ingress-nginx -n ingress-nginx --version 4.10.0 || exit 1
+
+      # Install cert-manager using kubectl
+      - name: Install cert-manager
+        run: |
+          kubectl create namespace cert-manager || echo "Namespace already exists"
+          kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.2/cert-manager.yaml || exit 1
+
+      # Install Certificate CRD using kubectl
+      - name: Install Certificate CRD
+        run: |
+          kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.5.3/cert-manager.crds.yaml || exit 1    
+
+      # applying manifests
+      - name: Apply Kubernetes Manifests
+        run: |
+            kubectl apply -f apps/sock-shop/complete-demo.yaml
+            kubectl apply -f apps/argocd/argocd.yaml
+            kubectl apply -f apps/argocd/argocd-cluster-role.yaml
+            kubectl apply -f apps/manifests-monitoring/prometheus 
+            kubectl apply -f apps/manifests-monitoring/grafana 
+        
+      # Deploy ELK Stack on EKS   
+      - name: Deploy ELK Stack
+        run: | 
+              cd apps/elk
+              kubectl config view
+              kubectl apply -f . --validate=false        
+        
+      - name: Verify kubectl configurations
+        run: | 
+              sleep 120
+              kubectl get svc -n elk
+              kubectl get svc -n argocd
+              kubectl get svc -n sock-shop
+              kubectl get svc -n monitoring 
+              kubectl get pods -n cert-manager
+              kubectl get pods -A     
+            
+            
+        
+
+      

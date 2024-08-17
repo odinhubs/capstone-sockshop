@@ -1,0 +1,28 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: sockshop-web-application
+  namespace: argocd
+  annotations:
+    notifications.argoproj.io/subscribe.on-deployed.slack: cd-alerts  #cd-alerts is the slack channel name
+    notifications.argoproj.io/subscribe.on-created.slack: cd-alerts
+    notifications.argoproj.io/subscribe.on-sync-failed.slack: cd-alerts
+    notifications.argoproj.io/subscribe.on-sync-succeeded.slack: cd-alerts
+    notifications.argoproj.io/subscribe.on-health-degraded.slack: cd-alerts
+    notifications.argoproj.io/subscribe.on-sync-running.slack: cd-alerts
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Zenitugo/microservice-app-CD
+    targetRevision: HEAD
+    path: ./manifest/sock-shop
+  destination: 
+    server: https://kubernetes.default.svc
+    namespace: sock-shop
+  syncPolicy:
+    syncOptions:
+    - CreateNamespace=true
+    automated:
+      selfHeal: true
+      prune: true

@@ -1,0 +1,22 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: sockshop-logs
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Zenitugo/microservice-app-CD
+    targetRevision: HEAD
+    path: ./manifest/logging                 #Path to logging yml files
+  destination: 
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    syncOptions:
+    - CreateNamespace=true
+    - Validate=true
+    automated:
+      selfHeal: true
+      prune: true

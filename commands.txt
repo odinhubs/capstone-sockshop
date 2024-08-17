@@ -1,0 +1,154 @@
+aws eks update-kubeconfig --name=timothy-mba-eks-cluster --region=us-east-1
+
+kubectl config set-context --current --namespace=sock-shop
+
+kubectl get pods -n sock-shop
+
+kubectl get pods -A
+
+kubectl get svc
+
+kubectl get svc -A
+
+kubectl patch svc front-end -p '{"spec": {"type": "LoadBalancer"}}' -n sock-shop
+
+kubectl get svc -A
+
+helm repo add argo-cd https://argoproj.github.io/argo-helm
+
+helm install argocd argo-cd/argo-cd
+
+kubectl get deployment
+
+kubectl patch svc argocd-server -p '{"spec": {"type": "LoadBalancer"}}'
+
+kubectl get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo
+
+kubectl get secret argocd-initial-admin-secret -o yaml -n argocd      ##### to get the password and username for argocd
+
+kubectl get secret argocd-initial-admin-secret -n argocd -o=jsonpath='{.data.password}' | base64 --decode   ####### to decode the password ARGOCD_PASSWORD=<output from
+
+kubectl get svc -A
+
+kubectl get deployment -A
+
+kubectl get nodes -o wide   # to get the nodepods ip address
+
+http://<NODE_IP>:31300
+
+kubectl get pods -n argocd # Identify the pod running Grafana:
+
+kubectl port-forward -n argocd <grafana-pod-name> 3000:3000 # Forward the Grafana port to your local machine:
+
+http://localhost:3000 # Access Grafana in your web browser:
+
+
+#########################
+
+# to install ingress 
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo update
+helm install ingress-nginx ingress-nginx/ingress-nginx
+
+# Create a file named my-ingress.yaml with the following content:
+
+apiVersion: networking.k8s.io/v1
+
+kubectl apply -f my-ingress.yaml # To apply the Ingress resource to use instead of port forwarding:
+
+
+
+
+
+
+
+##################################################
+
+kubectl apply -f  complete-demo.yaml
+
+kubectl create namespace argocd
+
+kubectl apply -f /path/argocd-server.yaml
+
+kubectl apply -f  argocd.yaml
+
+
+###### TFEKSWorkshop-cluster ######
+
+aws eks update-kubeconfig --name=timothy-mba-eks-cluster --region=us-east-1
+
+
+
+kubectl apply -f apps/grafana.yaml
+kubectl apply -f apps/prometheus.yaml || exit 1
+
+######################################
+
+# - name: Install Helm
+#   run: |
+#     curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
+#     chmod +x get_helm.sh
+#     ./get_helm.sh --version v3.7.0  # Specify the Helm version
+
+
+
+###################
+argocd cli terminal     
+
+#############################################
+
+# kubectl create -f apps/manifests-monitoring/00-monitoring/00-monitoring-ns.yaml
+#             kubectl apply -f apps/manifests-monitoring/prometheus1-10 $(ls *-prometheus-*.yaml | awk ' { print " -f " $1 } ')
+#             kubectl apply -f apps/manifests-monitoring/grafana20-22 $(ls *-grafana-*.yaml | awk ' { print " -f " $1 }'  | grep -v grafana-import)
+#             for file in $(find apps/manifest-monitoring -type f -name "*.yaml"); do
+#               kubectl apply -f $file
+#             done
+
+############################################################################
+
+
+
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: front-end
+  annotations:
+        prometheus.io/scrape: 'true'
+  labels:
+    name: front-end
+  namespace: sock-shop
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 8079
+  selector:
+    name: front-end
+
+
+    kubectl get all -n argocd
+    kubectl edit svc argocd-server -n argocd
+    kubectl get svc -n argocd
+
+
+
+    argocd login 'put the dns name'
+    ./argo.sh
+
+
+
+    https://github.com/microservices-demo/microservices-demo
+
+
+
+    - name: Install Argo CD
+      run: helm install argocd argo-cd/argo-cd --namespace argocd || exit 1 
+
+
+
+      Kubectl get ns
+
+
+
+kubectl apply -f apps/namespaces/namespace.yaml      
