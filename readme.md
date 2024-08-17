@@ -91,7 +91,7 @@ terraform {
   }
 }
 ```
-![diagram](images/22.jpeg)
+![diagram](images/22.png)
 
 #### Note
 This should not include in your pipeline deployment directory as it should be done seperately in a different directory.
@@ -144,7 +144,7 @@ Define tfvars for the project.
  Define outputs for the project.
 * Create a new file called outputs.tf and add the following ref: terraform/output.tf
 
-![diagram](images/2.jpeg)
+![diagram](images/2.png)
 
 
 # Step 3:
@@ -330,7 +330,7 @@ to login to the argocd application
 ```bash
  kubectl get svc -n argocd
 ```
-![diagram](images/18.jpeg)
+![diagram](images/18.png)
 
 use the load balancer to login to the argocd application
 
@@ -380,7 +380,7 @@ Traditionally, in Argo CD, we can deploy applications with configurations in man
 
 * Go to the argocd application and click on sync button
 
-![diagram](images/17.jpeg)
+![diagram](images/17.png)
 
 ### Find more images in the screenshot directory.
 
